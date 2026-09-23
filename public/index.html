@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Plan Math Club events, track expenses, and review your club budget.">
+  <meta name="theme-color" content="#5f1719">
+  <title>Math Club Finance</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <aside class="sidebar">
+    <div class="brand"><span class="symbol" aria-hidden="true">∑</span><div>MATH CLUB<small>Financial Management</small></div></div>
+    <nav aria-label="Main navigation">
+      <a href="#dashboard">Dashboard</a><a href="#events">Events</a>
+      <a href="#fundraising">Fundraising</a><a href="#reports">Reports</a>
+    </nav>
+    <div class="storage-note"><strong>Your club, in this browser.</strong><p>Records stay on this device. Export a backup before switching browsers or clearing site data.</p><button id="export" class="light">Export JSON backup</button><label class="file-label" for="import">Import JSON backup</label><input id="import" type="file" accept=".json,application/json"><button id="recovery" hidden>Download stored data for recovery</button></div>
+  </aside>
+  <main id="main" tabindex="-1">
+    <div class="eyebrow">MATH CLUB / FINANCE</div>
+    <div id="storage-error" role="alert" hidden></div>
+    <div id="notice" role="status" aria-live="polite"></div>
+    <div id="page"></div>
+    <noscript>Enable JavaScript to use this browser-only prototype.</noscript>
+    <footer>Math Club Finance · Browser-only prototype · USD</footer>
+  </main>
+  <section id="print-report" aria-label="Printable report"></section>
+</body>
+</html>

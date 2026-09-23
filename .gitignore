@@ -1,0 +1,13 @@
+.tools/
+node_modules/
+.vercel/
+dist/
+test-results/
+__pycache__/
+.venv/
+.env
+.env.*
+!.env.example
+# Local club records: import manually; never publish with the site.
+math_club_data.json
+*-backup-*.json
