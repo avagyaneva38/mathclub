@@ -23,9 +23,9 @@ Open **http://localhost:3000**. No `npm install` is necessary. Use the local ser
 
 ## Bring your current records over
 
-Use **Import JSON backup** in the sidebar and select your existing `math_club_data.json`. The importer accepts the original Python format and adds stable record IDs. Confirm the import to replace this browser's records. Your original file is not modified.
+Open **Backups** in the footer, choose **Import JSON**, and select your existing `math_club_data.json`. The importer accepts the original Python format and adds stable record IDs. Confirm the import to replace this browser's records. Your original file is not modified.
 
-The site starts with an empty ledger. `math_club_data.json` is intentionally ignored by Git so actual club records are not published. Use **Export JSON backup** regularly. Exports include all event and fundraiser reports and can be imported again.
+The site starts with an empty ledger. `math_club_data.json` is intentionally ignored by Git so actual club records are not published. Use **Backups → Export JSON** regularly. Exports include all event and fundraiser reports and can be imported again.
 
 Records are saved in this browser's local storage for this exact site address. They are **not shared between people, devices, browsers, localhost, Vercel preview URLs, or your production URL**. Clearing site data deletes them. Private browsing may discard them when closed. This prototype has no accounts or server backup.
 

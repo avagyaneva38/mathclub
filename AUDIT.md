@@ -21,7 +21,7 @@ Scope: the workspace's original `app.py` and data format, followed by the new st
 ## Intentional changes
 
 - No Python runtime, React framework, build step, database, or external requests are needed by the deployed app.
-- Local records are not seeded into the public site. Import the existing JSON through the sidebar.
+- Local records are not seeded into the public site. Import the existing JSON through the footer's Backups menu.
 - PDF export now uses the browser's Print / Save PDF dialog instead of ReportLab. Meeting reports are available even before two event reports are completed.
 - Zero-attendance cost-per-person and zero-expected-attendance ratios display N/A instead of a misleading zero.
 - The existing burgundy and warm-paper visual theme is retained. No banner file exists in the workspace, so the interface does not reference a missing image.

@@ -18,7 +18,6 @@
       <a href="#dashboard">Dashboard</a><a href="#events">Events</a>
       <a href="#fundraising">Fundraising</a><a href="#reports">Reports</a>
     </nav>
-    <div class="storage-note"><strong>Your club, in this browser.</strong><p>Records stay on this device. Export a backup before switching browsers or clearing site data.</p><button id="export" class="light">Export JSON backup</button><label class="file-label" for="import">Import JSON backup</label><input id="import" type="file" accept=".json,application/json"><button id="recovery" hidden>Download stored data for recovery</button></div>
   </aside>
   <main id="main" tabindex="-1">
     <div class="eyebrow">MATH CLUB / FINANCE</div>
@@ -26,7 +25,21 @@
     <div id="notice" role="status" aria-live="polite"></div>
     <div id="page"></div>
     <noscript>Enable JavaScript to use this browser-only prototype.</noscript>
-    <footer>Math Club Finance · Browser-only prototype · USD</footer>
+    <footer>
+      <span>Math Club Finance · Browser-only prototype · USD</span>
+      <details id="backup-tools" class="backup-tools">
+        <summary>Backups</summary>
+        <div class="backup-panel">
+          <div class="backup-actions">
+            <button id="export" type="button">Export JSON</button>
+            <button id="import-trigger" type="button">Import JSON</button>
+            <input id="import" type="file" accept=".json,application/json" aria-label="Import JSON backup" hidden>
+            <button id="recovery" type="button" hidden>Download stored data for recovery</button>
+          </div>
+          <p>Saved in this browser only. Export a backup before switching browsers or clearing site data.</p>
+        </div>
+      </details>
+    </footer>
   </main>
   <section id="print-report" aria-label="Printable report"></section>
 </body>

@@ -18,6 +18,7 @@ function block(message) {
   banner.textContent = message;
   banner.hidden = false;
   document.querySelector('#recovery').hidden = false;
+  document.querySelector('#backup-tools').open = true;
 }
 try { state = loadData(localStorage); }
 catch { block('Saved records could not be read. They have not been overwritten. Download the stored data for recovery, or import a valid backup to replace it. If browser storage is disabled, enable it and reload.'); }
@@ -153,6 +154,7 @@ document.querySelector('#recovery').addEventListener('click', () => {
   try { const raw = localStorage.getItem(STORAGE_KEY); if (raw === null) throw new Error('No stored records were found.'); download(raw, 'mathclub-recovery.json'); }
   catch (error) { tell(error.message, true); }
 });
+document.querySelector('#import-trigger').addEventListener('click', () => document.querySelector('#import').click());
 document.querySelector('#import').addEventListener('change', async event => {
   const file = event.target.files[0];
   if (!file) return;
