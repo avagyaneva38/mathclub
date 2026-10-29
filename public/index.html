@@ -44,6 +44,39 @@
     </div>
   </section>
 
+  <!-- Password setup and recovery screen -->
+  <section id="password-screen" hidden>
+    <div class="login-card">
+      <div class="login-brand">∑ MATH CLUB</div>
+      <h1>Create New Password</h1>
+      <p>Choose a password for your Math Club e-board account.</p>
+
+      <form id="password-form">
+        <label for="new-password">New Password</label>
+        <input
+          id="new-password"
+          type="password"
+          autocomplete="new-password"
+          minlength="12"
+          required
+        >
+
+        <label for="confirm-password">Confirm New Password</label>
+        <input
+          id="confirm-password"
+          type="password"
+          autocomplete="new-password"
+          minlength="12"
+          required
+        >
+
+        <button type="submit">Save New Password</button>
+      </form>
+
+      <p id="password-error" role="alert"></p>
+    </div>
+  </section>
+
   <!-- Existing financial dashboard -->
   <div id="app-shell" hidden>
     <a class="skip-link" href="#main">Skip to content</a>
