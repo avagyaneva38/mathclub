@@ -71,3 +71,5 @@ npm run test:browser
 The first command uses Node's built-in test runner. Browser checks require an installed Chrome or Edge and use a separate temporary profile; set `CHROME_PATH` if the executable is not in a common location. Browser checks write screenshots, a PDF, and synthetic backups to the ignored `test-results/` folder. They do not use your personal browser profile or club records.
 
 For shared club use later, add authenticated accounts and a server database before treating this as a multi-user system. Browser storage offers no cross-device synchronization; stale-tab checks reduce accidental overwrites but are not database transactions.
+
+Working Supabase email-and-password login.
