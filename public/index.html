@@ -1,9 +1,10 @@
+
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Plan Math Club events, track expenses, and review your club budget.">
+  <meta name="description" content="Math Club Financial Management">
   <meta name="theme-color" content="#5f1719">
   <title>Math Club Finance</title>
   <link rel="icon" href="data:,">
@@ -11,36 +12,114 @@
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
-  <aside class="sidebar">
-    <div class="brand"><span class="symbol" aria-hidden="true">∑</span><div>MATH CLUB<small>Financial Management</small></div></div>
-    <nav aria-label="Main navigation">
-      <a href="#dashboard">Dashboard</a><a href="#events">Events</a>
-      <a href="#fundraising">Fundraising</a><a href="#reports">Reports</a>
-    </nav>
-  </aside>
-  <main id="main" tabindex="-1">
-    <div class="eyebrow">MATH CLUB / FINANCE</div>
-    <div id="storage-error" role="alert" hidden></div>
-    <div id="notice" role="status" aria-live="polite"></div>
-    <div id="page"></div>
-    <noscript>Enable JavaScript to use this browser-only prototype.</noscript>
-    <footer>
-      <span>Math Club Finance · Browser-only prototype · USD</span>
-      <details id="backup-tools" class="backup-tools">
-        <summary>Backups</summary>
-        <div class="backup-panel">
-          <div class="backup-actions">
-            <button id="export" type="button">Export JSON</button>
-            <button id="import-trigger" type="button">Import JSON</button>
-            <input id="import" type="file" accept=".json,application/json" aria-label="Import JSON backup" hidden>
-            <button id="recovery" type="button" hidden>Download stored data for recovery</button>
-          </div>
-          <p>Saved in this browser only. Export a backup before switching browsers or clearing site data.</p>
+
+  <!-- E-board login screen -->
+  <section id="login-screen" hidden>
+    <div class="login-card">
+      <div class="login-brand">∑ MATH CLUB</div>
+      <h1>Financial Management</h1>
+      <p>Sign in with your approved e-board account.</p>
+
+      <form id="login-form">
+        <label for="login-email">Email</label>
+        <input
+          id="login-email"
+          type="email"
+          autocomplete="email"
+          required
+        >
+
+        <label for="login-password">Password</label>
+        <input
+          id="login-password"
+          type="password"
+          autocomplete="current-password"
+          required
+        >
+
+        <button type="submit">Sign In</button>
+      </form>
+
+      <p id="login-error" role="alert"></p>
+    </div>
+  </section>
+
+  <!-- Existing financial dashboard -->
+  <div id="app-shell" hidden>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="symbol" aria-hidden="true">∑</span>
+        <div>
+          MATH CLUB
+          <small>Financial Management</small>
         </div>
-      </details>
-    </footer>
-  </main>
-  <section id="print-report" aria-label="Printable report"></section>
+      </div>
+
+      <nav aria-label="Main navigation">
+        <a href="#dashboard">Dashboard</a>
+        <a href="#events">Events</a>
+        <a href="#fundraising">Fundraising</a>
+        <a href="#reports">Reports</a>
+      </nav>
+    </aside>
+
+    <main id="main" tabindex="-1">
+      <div class="eyebrow">MATH CLUB / FINANCE</div>
+
+      <button id="logout-button" type="button">
+        Sign Out
+      </button>
+
+      <div id="storage-error" role="alert" hidden></div>
+      <div id="notice" role="status" aria-live="polite"></div>
+      <div id="page"></div>
+
+      <noscript>Enable JavaScript to use this website.</noscript>
+
+      <footer>
+        <span>Math Club Finance · USD</span>
+
+        <details id="backup-tools" class="backup-tools">
+          <summary>Backups</summary>
+
+          <div class="backup-panel">
+            <div class="backup-actions">
+              <button id="export" type="button">
+                Export JSON
+              </button>
+
+              <button id="import-trigger" type="button">
+                Import JSON
+              </button>
+
+              <input
+                id="import"
+                type="file"
+                accept=".json,application/json"
+                aria-label="Import JSON backup"
+                hidden
+              >
+
+              <button id="recovery" type="button" hidden>
+                Download stored data for recovery
+              </button>
+            </div>
+
+            <p>
+              Export a backup before making major changes.
+            </p>
+          </div>
+        </details>
+      </footer>
+    </main>
+  </div>
+
+  <section
+    id="print-report"
+    aria-label="Printable report"
+  ></section>
+
 </body>
 </html>
