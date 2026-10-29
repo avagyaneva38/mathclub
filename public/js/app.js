@@ -848,4 +848,28 @@ async function requestPasswordRecovery(email) {
   if (error) throw error;
 }
 
+document.querySelector('#forgot-password').addEventListener(
+  'click',
+  async () => {
+    const email = document.querySelector('#login-email').value.trim();
+    const message = document.querySelector('#login-error');
+
+    if (!email) {
+      message.textContent =
+        'Enter your email address above, then click Forgot Password.';
+      return;
+    }
+
+    message.textContent = 'Sending recovery email...';
+
+    try {
+      await requestPasswordRecovery(email);
+      message.textContent =
+        'If this email has an account, a password recovery link will be sent.';
+    } catch (error) {
+      message.textContent = error.message;
+    }
+  }
+);
+
 initializeAuth();
