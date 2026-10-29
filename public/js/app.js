@@ -208,8 +208,15 @@ $('#login-form').addEventListener('submit', async event => {
   const errorBox = $('#login-error');
   errorBox.textContent = 'Signing in...';
 
-  const email = $('#login-email').value.trim();
-  const password = $('#login-password').value;
+const username = $('#login-email').value.trim();
+const password = $('#login-password').value;
+
+if (username !== 'mathclub') {
+  errorBox.textContent = 'Invalid username or password.';
+  return;
+}
+
+const email = 'avagyaneva38@gmail.com';
 
   const { error } = await supabase.auth.signInWithPassword({
     email,
