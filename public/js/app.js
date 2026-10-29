@@ -151,57 +151,6 @@ async function initializeAuth() {
   }
 }
 
-$('#password-form').addEventListener('submit', async event => {
-  event.preventDefault();
-
-  const password = $('#new-password').value;
-  const confirmation = $('#confirm-password').value;
-  const errorBox = $('#password-error');
-  const button = event.target.querySelector('button[type="submit"]');
-
-  if (password !== confirmation) {
-    errorBox.textContent = 'Passwords do not match.';
-    return;
-  }
-  if (password.length < 12) {
-    errorBox.textContent = 'Use at least 12 characters.';
-    return;
-  }
-
-  button.disabled = true;
-  errorBox.textContent = 'Saving your password...';
-
-  try {
-    const { data: { session }, error: sessionError } =
-      await supabase.auth.getSession();
-
-    if (sessionError) throw sessionError;
-    if (!session) {
-      throw new Error('Your recovery session expired. Request a new recovery email.');
-    }
-
-    const { error } = await supabase.auth.updateUser({ password });
-    if (error) throw error;
-
-    event.target.reset();
-    recoveryMode = false;
-
-    // Remove recovery tokens from the URL.
-    history.replaceState(null, '', window.location.pathname);
-
-    try {
-      await showAuthorizedDashboard();
-    } catch {
-      await supabase.auth.signOut();
-      showLogin('Password saved. Sign in with your new password.');
-    }
-  } catch (error) {
-    errorBox.textContent = error.message;
-  } finally {
-    button.disabled = false;
-  }
-});
-
 $('#login-form').addEventListener('submit', async event => {
   event.preventDefault();
 
