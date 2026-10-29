@@ -837,5 +837,15 @@ $('#import').addEventListener('change', async event => {
 });
 
 // START APPLICATION
+const PREVIEW_URL =
+  'https://mathclub-bv66p9e6b-eva-b822.vercel.app/';
+
+async function requestPasswordRecovery(email) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: PREVIEW_URL
+  });
+
+  if (error) throw error;
+}
 
 initializeAuth();
