@@ -51,6 +51,7 @@ function dashboard() {
   return heading('Finance dashboard', 'A clear view of your club’s budget, events, and fundraising.') +
     `<div class="metrics">${metric('Annual budget', usd(cents(d.starting_balance) + d.additional_funding.reduce((sum, f) => sum + cents(f.amount), 0)))}${metric('Event expenses', usd(t.spending))}${metric('Available balance', usd(t.balance))}</div>
     ${t.balance < 0 ? '<p class="message error">Recorded spending exceeds the available budget.</p>' : ''}
+    <section class="card"><h2>Events at a glance</h2>${d.events.length ? table(['Event', 'Expenses', 'Total cost', 'Report'], d.events.map(e => [e.Event, e.Expenses.length, usd(eventCost(e)), hasReport(e) ? 'Complete' : 'Pending'])) : '<p class="empty">Your ledger starts here. <a href="#events">Create your first event</a> or import your existing JSON backup.</p>'}</section>
     <div class="columns"><section class="card annual-budget-card"><h2>Annual budget</h2>
     <p class="total">Starting balance: <strong>${usd(cents(d.starting_balance))}</strong></p>
     ${d.additional_funding.length ? `<h3>Additional funding</h3><div class="table-wrap"><table><thead><tr><th>Source</th><th>Amount</th>${budgetEditing ? '<th>Action</th>' : ''}</tr></thead><tbody>${d.additional_funding.map(f => `<tr><td>${esc(f.name)}</td><td>${usd(cents(f.amount))}</td>${budgetEditing ? `<td><button type="button" class="subtle danger" data-delete-funding="${esc(f.id)}">Remove</button></td>` : ''}</tr>`).join('')}</tbody></table></div>` : ''}
@@ -59,7 +60,7 @@ function dashboard() {
     <div class="budget-edit-action"><button type="button" class="subtle" id="budget-toggle">${budgetEditing ? 'Done Editing' : 'Edit Budget'}</button></div>
     </section>
     <section class="card"><h2>Fundraising</h2><dl><dt>Actual revenue</dt><dd>${usd(t.revenue)}</dd><dt>Actual expenses</dt><dd>${usd(t.expenses)}</dd><dt>Net profit</dt><dd>${usd(t.profit)}</dd></dl><p class="muted">Only completed fundraiser reports affect your balance.</p></section></div>
-    <section class="card"><h2>Events at a glance</h2>${d.events.length ? table(['Event', 'Expenses', 'Total cost', 'Report'], d.events.map(e => [e.Event, e.Expenses.length, usd(eventCost(e)), hasReport(e) ? 'Complete' : 'Pending'])) : '<p class="empty">Your ledger starts here. <a href="#events">Create your first event</a> or import your existing JSON backup.</p>'}</section>`;
+`;
 }
 function events() {
   const e = state.data.events.find(item => item.id === eventId);
