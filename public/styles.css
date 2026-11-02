@@ -101,3 +101,10 @@ footer { display: flex; justify-content: space-between; align-items: baseline; f
   .action-plan { break-before: page; }
   .writing-box { height: 95px; }
 }
+
+/* Event list and read-only event details */
+.event-link { padding: 0; border: 0; background: transparent; color: var(--wine); text-decoration: underline; text-underline-offset: 4px; font-size: inherit; font-weight: bold; text-align: left; }
+.event-link:hover { background: transparent; color: #7a292b; }
+.event-toolbar { margin: 0 0 18px; }
+.event-toolbar .subtle { background: transparent; color: var(--wine); }
+.event-toolbar .subtle:hover { background: #f4e5dd; }
