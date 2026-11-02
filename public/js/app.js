@@ -43,6 +43,7 @@ const integer = (name, label, value = 0) => input(name, label, value, 'number', 
 const select = (name, label, options, value) => `<label>${label}<select name="${name}" required>${options.map(x => `<option ${x === value ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select></label>`;
 const notes = value => `<label>Notes<textarea name="notes" maxlength="10000" rows="4">${esc(value ?? '')}</textarea></label>`;
 const metric = (label, value) => `<div class="metric"><span>${label}</span><strong>${esc(value)}</strong></div>`;
+const eventDate = e => e.Date ? new Date(e.Date + 'T12:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' }) : 'Not set';
 const picker = (id, label, records, key, selected) => `<label>${label}<select id="${id}">${records.map((x, i) => `<option value="${esc(x.id)}" ${x.id === selected ? 'selected' : ''}>${esc(x[key])} · #${i + 1}</option>`).join('')}</select></label>`;
 function currentEvent() { return state.data.events.find(e => e.id === eventId) ?? state.data.events[0]; }
 function currentFundraiser() { return state.data.fundraisers.find(f => f.id === fundraiserId) ?? state.data.fundraisers[0]; }
@@ -51,7 +52,7 @@ function dashboard() {
   return heading('Finance dashboard', 'A clear view of your club’s budget, events, and fundraising.') +
     `<div class="metrics">${metric('Annual budget', usd(cents(d.starting_balance) + d.additional_funding.reduce((sum, f) => sum + cents(f.amount), 0)))}${metric('Event expenses', usd(t.spending))}${metric('Available balance', usd(t.balance))}</div>
     ${t.balance < 0 ? '<p class="message error">Recorded spending exceeds the available budget.</p>' : ''}
-    <section class="card"><h2>Events at a glance</h2>${d.events.length ? table(['Event', 'Expenses', 'Total cost', 'Report'], d.events.map(e => [e.Event, e.Expenses.length, usd(eventCost(e)), hasReport(e) ? 'Complete' : 'Pending'])) : '<p class="empty">Your ledger starts here. <a href="#events">Create your first event</a> or import your existing JSON backup.</p>'}</section>
+    <section class="card"><h2>Events at a glance</h2>${d.events.length ? table(['Event', 'Expenses', 'Total cost', 'Date'], d.events.map(e => [e.Event, e.Expenses.length, usd(eventCost(e)), eventDate(e)])) : '<p class="empty">Your ledger starts here. <a href="#events">Create your first event</a> or import your existing JSON backup.</p>'}</section>
     <div class="columns"><section class="card annual-budget-card"><h2>Annual budget</h2>
     <p class="total">Starting balance: <strong>${usd(cents(d.starting_balance))}</strong></p>
     ${d.additional_funding.length ? `<h3>Additional funding</h3><div class="table-wrap"><table><thead><tr><th>Source</th><th>Amount</th>${budgetEditing ? '<th>Action</th>' : ''}</tr></thead><tbody>${d.additional_funding.map(f => `<tr><td>${esc(f.name)}</td><td>${usd(cents(f.amount))}</td>${budgetEditing ? `<td><button type="button" class="subtle danger" data-delete-funding="${esc(f.id)}">Remove</button></td>` : ''}</tr>`).join('')}</tbody></table></div>` : ''}
@@ -66,7 +67,7 @@ function events() {
   const e = state.data.events.find(item => item.id === eventId);
   const list = heading('Events', 'Create an event or select one to see its details.') +
     `<section class="card"><h2>Create Event</h2><form id="create-event" class="inline">${input('name', 'Event name', '', 'text', 'maxlength="160" placeholder="e.g. Math Made Sweet"')}<button>Create Event</button></form></section>
-    <section class="card"><h2>Events</h2>${state.data.events.length ? `<div class="table-wrap"><table><thead><tr><th>Event</th><th>Expenses</th><th>Total spending</th><th>Report</th><th></th></tr></thead><tbody>${state.data.events.map(item => `<tr><td><button type="button" class="event-link" data-open-event="${esc(item.id)}">${esc(item.Event)}</button></td><td>${item.Expenses.length}</td><td>${usd(eventCost(item))}</td><td>${hasReport(item) ? 'Complete' : 'Pending'}</td><td><button type="button" class="subtle" data-open-event="${esc(item.id)}">View</button></td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">No events yet. Create your first event above.</p>'}</section>`;
+    <section class="card"><h2>Events</h2>${state.data.events.length ? `<div class="table-wrap"><table><thead><tr><th>Event</th><th>Expenses</th><th>Total cost</th><th>Date</th><th></th></tr></thead><tbody>${state.data.events.map(item => `<tr><td><button type="button" class="event-link" data-open-event="${esc(item.id)}">${esc(item.Event)}</button></td><td>${item.Expenses.length}</td><td>${usd(eventCost(item))}</td><td>${esc(eventDate(item))}</td><td><button type="button" class="subtle" data-open-event="${esc(item.id)}">View</button></td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">No events yet. Create your first event above.</p>'}</section>`;
   if (!eventOpen || !e) return list;
   const r = e.Report ?? {};
   const reportDetails = hasReport(e) ? `<dl>
@@ -80,8 +81,8 @@ function events() {
   return heading('Event details', 'Review event information before making changes.') +
     `<div class="card-actions event-toolbar"><button type="button" class="subtle" id="back-to-events">← All Events</button>
     ${eventEditing ? '<button type="button" class="subtle" id="cancel-event-edit">Done Editing</button>' : '<button type="button" id="edit-event">Edit Event</button>'}</div>
-    <section class="card"><h2>${esc(e.Event)}</h2><p class="total">Total spending: ${usd(eventCost(e))}</p>
-    ${eventEditing ? `<form id="rename-event" class="inline">${input('name', 'Event name', e.Event, 'text', 'maxlength="160"')}<button>Save Name</button></form>` : ''}
+    <section class="card"><h2>${esc(e.Event)}</h2><p class="muted">Date: ${esc(eventDate(e))}</p><p class="total">Total spending: ${usd(eventCost(e))}</p>
+    ${eventEditing ? `<form id="rename-event" class="inline">${input('name', 'Event name', e.Event, 'text', 'maxlength="160"')}<label>Event date<input type="date" name="date" value="${esc(e.Date ?? '')}"></label><button>Save Event Details</button></form>` : ''}
     <h3>Recorded expenses</h3>
     ${e.Expenses.length ? `<div class="table-wrap"><table><thead><tr><th>Category</th><th>Description</th><th>Amount</th>${eventEditing ? '<th>Action</th>' : ''}</tr></thead><tbody>${e.Expenses.map(x => `<tr><td>${esc(x.Category)}</td><td>${esc(x.Description)}</td><td>${usd(cents(x.Amount))}</td>${eventEditing ? `<td><button type="button" class="subtle danger" data-delete-expense="${esc(x.id)}">Delete</button></td>` : ''}</tr>`).join('')}</tbody></table></div>` : '<p class="muted">No expenses recorded yet.</p>'}
     ${eventEditing ? `<form id="expense"><h3>Add expense</h3><div class="form-grid">${select('category', 'Category', CATEGORIES)}${cash('amount', 'Amount', '', true)}</div><label>Description<input name="description" maxlength="500" placeholder="e.g. Pizza"></label><button>Add Expense</button></form>` : ''}
@@ -159,10 +160,10 @@ page.addEventListener('submit', event => {
       case 'budget': commit(d => { d.starting_balance = n('balance'); }, 'Budget saved.'); break;
       case 'create-event': {
         const id = newId();
-        commit(d => { d.events.push({ id, Event: s('name'), Expenses: [], Report: {} }); }, 'Event created.');
+        commit(d => { d.events.push({ id, Event: s('name'), Date: '', Expenses: [], Report: {} }); }, 'Event created.');
         eventId = id; eventOpen = false; eventEditing = false; render(); break;
       }
-      case 'rename-event': commit(d => { d.events.find(e => e.id === eventId).Event = s('name'); }, 'Event name saved.'); break;
+      case 'rename-event': commit(d => { const e = d.events.find(e => e.id === eventId); e.Event = s('name'); e.Date = s('date'); }, 'Event details saved.'); break;
       case 'expense': commit(d => { d.events.find(e => e.id === eventId).Expenses.push({ id: newId(), Category: s('category'), Description: s('description'), Amount: n('amount') }); }, 'Expense saved.'); break;
       case 'create-fundraiser': {
         const id = newId();
