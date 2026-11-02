@@ -2,7 +2,7 @@ export const CATEGORIES = ['Food', 'Decorations', 'Equipment', 'Prizes', 'Suppli
 export const FOOD_OPTIONS = ['Just enough', 'Too much', 'Not enough', 'No food was served'];
 export const REPEAT_OPTIONS = ['Yes', 'Maybe', 'No'];
 export const MAX_FILE_BYTES = 2 * 1024 * 1024;
-export const emptyData = () => ({ schema_version: 1, starting_balance: 0, allocations: [], events: [], fundraisers: [] });
+export const emptyData = () => ({ schema_version: 1, starting_balance: 0, additional_funding: [], events: [], fundraisers: [] });
 export const newId = () => crypto.randomUUID();
 const object = (x, label) => {
   if (!x || typeof x !== 'object' || Array.isArray(x)) throw new Error(`${label} must be an object.`);
@@ -64,9 +64,9 @@ export function validateData(raw) {
   const result = {
     schema_version: 1,
     starting_balance: money(d.starting_balance, 'Starting balance'),
-    allocations: list(d.allocations ?? [], 'Allocations').map(item => {
-      const allocation = object(item, 'Allocation');
-      return { id: id(allocation.id), name: textValue(allocation.name, 'Allocation name'), amount: money(allocation.amount, 'Allocation amount') };
+    additional_funding: list(d.additional_funding ?? d.allocations ?? [], 'Additional funding').map(item => {
+      const funding = object(item, 'Additional funding');
+      return { id: id(funding.id), name: textValue(funding.name, 'Funding source'), amount: money(funding.amount, 'Funding amount') };
     }),
     events: list(d.events, 'Events').map(rawEvent => {
       const e = object(rawEvent, 'Event');
@@ -87,7 +87,6 @@ export function validateData(raw) {
         'Predicted Revenue': money(f['Predicted Revenue'], 'Predicted revenue'), Report: report(f.Report, true) };
     })
   };
-  if (result.allocations.reduce((sum, item) => sum + Math.round(item.amount * 100), 0) > Math.round(result.starting_balance * 100)) throw new Error('Allocations cannot exceed the starting budget.');
   totals(result); // Also reject aggregate amounts beyond exact integer arithmetic.
   return result;
 }
@@ -99,8 +98,9 @@ export function totals(d) {
   const revenue = d.fundraisers.reduce((sum, f) => sum + (hasReport(f) ? cents(f.Report['Actual Revenue']) : 0), 0);
   const expenses = d.fundraisers.reduce((sum, f) => sum + (hasReport(f) ? cents(f.Report['Actual Expenses']) : 0), 0);
   const profit = revenue - expenses;
-  const balance = cents(d.starting_balance) - spending + profit;
-  if (![spending, revenue, expenses, profit, balance].every(Number.isSafeInteger)) throw new Error('The combined amounts are too large.');
+  const funding = (d.additional_funding ?? []).reduce((sum, item) => sum + cents(item.amount), 0);
+  const balance = cents(d.starting_balance) + funding - spending + profit;
+  if (![spending, revenue, expenses, profit, funding, balance].every(Number.isSafeInteger)) throw new Error('The combined amounts are too large.');
   return { spending, revenue, expenses, profit, balance };
 }
 export const formatMoney = value => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value / 100);
