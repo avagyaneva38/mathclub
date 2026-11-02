@@ -72,6 +72,7 @@ export function validateData(raw) {
       const e = object(rawEvent, 'Event');
       return {
         id: id(e.id), Event: textValue(e.Event, 'Event name'),
+        Date: (() => { const value = e.Date ?? ''; if (typeof value !== 'string' || (value && (!/^\\d{4}-\\d{2}-\\d{2}$/.test(value) || Number.isNaN(Date.parse(value + 'T12:00:00Z')) || new Date(value + 'T12:00:00Z').toISOString().slice(0, 10) !== value))) throw new Error('Event date must be a valid YYYY-MM-DD date.'); return value; })(),
         Expenses: list(e.Expenses, 'Expenses').map(rawExpense => {
           const x = object(rawExpense, 'Expense');
           const amount = money(x.Amount);
