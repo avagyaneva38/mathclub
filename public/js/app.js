@@ -5,6 +5,8 @@ import { table, reportHtml } from './reports.js';
 let state = { data: emptyData(), raw: null };
 let blocked = false;
 let eventId = '';
+let eventOpen = false;
+let eventEditing = false;
 let fundraiserId = '';
 const page = document.querySelector('#page');
 const notice = document.querySelector('#notice');
@@ -51,13 +53,31 @@ function dashboard() {
     <section class="card"><h2>Events at a glance</h2>${d.events.length ? table(['Event', 'Expenses', 'Total cost', 'Report'], d.events.map(e => [e.Event, e.Expenses.length, usd(eventCost(e)), hasReport(e) ? 'Complete' : 'Pending'])) : '<p class="empty">Your ledger starts here. <a href="#events">Create your first event</a> or import your existing JSON backup.</p>'}</section>`;
 }
 function events() {
-  const e = currentEvent(); if (e) eventId = e.id;
-  return heading('Events', 'Create an event and keep every expense in one place.') +
-    `<section class="card"><h2>Create event</h2><form id="create-event" class="inline">${input('name', 'Event name', '', 'text', 'maxlength="160" placeholder="e.g. Math Made Sweet"')}<button>Create event</button></form></section>` +
-    (e ? `<section class="card">${picker('event-picker', 'Manage event', state.data.events, 'Event', e.id)}<h2>${esc(e.Event)}</h2><p class="total">Total spending: ${usd(eventCost(e))}</p>
-    <form id="expense"><h3>Add expense</h3><div class="form-grid">${select('category', 'Category', CATEGORIES)}${cash('amount', 'Amount', '', true)}</div><label>Description<input name="description" maxlength="500" placeholder="e.g. Pizza"></label><button>Add expense</button></form>
-    <h3>Recorded expenses</h3>${e.Expenses.length ? `<div class="table-wrap"><table><thead><tr><th>Category</th><th>Description</th><th>Amount</th><th>Action</th></tr></thead><tbody>${e.Expenses.map(x => `<tr><td>${esc(x.Category)}</td><td>${esc(x.Description)}</td><td>${usd(cents(x.Amount))}</td><td><button class="subtle danger" data-delete-expense="${esc(x.id)}" aria-label="Delete expense ${esc(x.Description || x.Category)}">Delete</button></td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">No expenses recorded yet.</p>'}
-    <div class="card-actions"><a href="#reports">Write an event report →</a><button class="danger" data-delete-event="${esc(e.id)}">Delete event</button></div></section>` : '<p class="empty">Create an event to begin tracking expenses.</p>');
+  const e = state.data.events.find(item => item.id === eventId);
+  const list = heading('Events', 'Create an event or select one to see its details.') +
+    `<section class="card"><h2>Create Event</h2><form id="create-event" class="inline">${input('name', 'Event name', '', 'text', 'maxlength="160" placeholder="e.g. Math Made Sweet"')}<button>Create Event</button></form></section>
+    <section class="card"><h2>Events</h2>${state.data.events.length ? `<div class="table-wrap"><table><thead><tr><th>Event</th><th>Expenses</th><th>Total spending</th><th>Report</th><th></th></tr></thead><tbody>${state.data.events.map(item => `<tr><td><button type="button" class="event-link" data-open-event="${esc(item.id)}">${esc(item.Event)}</button></td><td>${item.Expenses.length}</td><td>${usd(eventCost(item))}</td><td>${hasReport(item) ? 'Complete' : 'Pending'}</td><td><button type="button" class="subtle" data-open-event="${esc(item.id)}">View</button></td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">No events yet. Create your first event above.</p>'}</section>`;
+  if (!eventOpen || !e) return list;
+  const r = e.Report ?? {};
+  const reportDetails = hasReport(e) ? `<dl>
+    <dt>Expected attendance</dt><dd>${esc(r['Expected Attendance'])}</dd>
+    <dt>Actual attendance</dt><dd>${esc(r['Actual Attendance'])}</dd>
+    <dt>Food</dt><dd>${esc(r['Food Result'])}</dd>
+    <dt>Leftover servings</dt><dd>${esc(r['Leftover Servings'])}</dd>
+    <dt>Event rating</dt><dd>${esc(r['Event Rating'])} / 5</dd>
+    <dt>Host again?</dt><dd>${esc(r['Host Again'])}</dd>
+    <dt>Notes</dt><dd class="notes">${esc(r.Notes || 'None')}</dd></dl>` : '<p class="muted">No event report has been added yet.</p>';
+  return heading('Event details', 'Review event information before making changes.') +
+    `<div class="card-actions event-toolbar"><button type="button" class="subtle" id="back-to-events">← All Events</button>
+    ${eventEditing ? '<button type="button" class="subtle" id="cancel-event-edit">Done Editing</button>' : '<button type="button" id="edit-event">Edit Event</button>'}</div>
+    <section class="card"><h2>${esc(e.Event)}</h2><p class="total">Total spending: ${usd(eventCost(e))}</p>
+    ${eventEditing ? `<form id="rename-event" class="inline">${input('name', 'Event name', e.Event, 'text', 'maxlength="160"')}<button>Save Name</button></form>` : ''}
+    <h3>Recorded expenses</h3>
+    ${e.Expenses.length ? `<div class="table-wrap"><table><thead><tr><th>Category</th><th>Description</th><th>Amount</th>${eventEditing ? '<th>Action</th>' : ''}</tr></thead><tbody>${e.Expenses.map(x => `<tr><td>${esc(x.Category)}</td><td>${esc(x.Description)}</td><td>${usd(cents(x.Amount))}</td>${eventEditing ? `<td><button type="button" class="subtle danger" data-delete-expense="${esc(x.id)}">Delete</button></td>` : ''}</tr>`).join('')}</tbody></table></div>` : '<p class="muted">No expenses recorded yet.</p>'}
+    ${eventEditing ? `<form id="expense"><h3>Add expense</h3><div class="form-grid">${select('category', 'Category', CATEGORIES)}${cash('amount', 'Amount', '', true)}</div><label>Description<input name="description" maxlength="500" placeholder="e.g. Pizza"></label><button>Add Expense</button></form>` : ''}
+    <h3>Event report</h3>
+    ${eventEditing ? `<form id="event-report"><div class="form-grid">${integer('expected', 'Expected attendance', r['Expected Attendance'] ?? 0)}${integer('actual', 'Actual attendance', r['Actual Attendance'] ?? 0)}${select('food', 'How was the amount of food?', FOOD_OPTIONS, r['Food Result'])}${integer('leftovers', 'Leftover servings', r['Leftover Servings'] ?? 0)}${select('rating', 'Overall event success (1–5)', ['1', '2', '3', '4', '5'], String(r['Event Rating'] ?? 3))}${select('repeat', 'Would you host this event again?', REPEAT_OPTIONS, r['Host Again'])}</div>${notes(r.Notes)}<button>Save Event Report</button></form>` : reportDetails}
+    ${eventEditing ? `<div class="card-actions"><button type="button" class="danger" data-delete-event="${esc(e.id)}">Delete Event</button></div>` : ''}</section>`;
 }
 function fundraising() {
   const f = currentFundraiser(); if (f) fundraiserId = f.id;
@@ -91,7 +111,7 @@ function render() {
   });
   if (blocked) page.querySelectorAll('input, select, textarea, button').forEach(x => { x.disabled = true; });
 }
-window.addEventListener('hashchange', () => { tell(''); render(); document.querySelector('#main').focus(); });
+window.addEventListener('hashchange', () => { eventOpen = false; eventEditing = false; tell(''); render(); document.querySelector('#main').focus(); });
 window.addEventListener('storage', event => {
   if (event.key === STORAGE_KEY || event.key === null) {
     block('Records changed in another tab. Reload this page before editing to avoid overwriting those changes.');
@@ -114,8 +134,9 @@ page.addEventListener('submit', event => {
       case 'create-event': {
         const id = newId();
         commit(d => { d.events.push({ id, Event: s('name'), Expenses: [], Report: {} }); }, 'Event created.');
-        eventId = id; render(); break;
+        eventId = id; eventOpen = false; eventEditing = false; render(); break;
       }
+      case 'rename-event': commit(d => { d.events.find(e => e.id === eventId).Event = s('name'); }, 'Event name saved.'); break;
       case 'expense': commit(d => { d.events.find(e => e.id === eventId).Expenses.push({ id: newId(), Category: s('category'), Description: s('description'), Amount: n('amount') }); }, 'Expense saved.'); break;
       case 'create-fundraiser': {
         const id = newId();
@@ -131,11 +152,15 @@ page.addEventListener('click', event => {
   const button = event.target.closest('button');
   if (!button) return;
   try {
+    if (button.dataset.openEvent) { eventId = button.dataset.openEvent; eventOpen = true; eventEditing = false; render(); return; }
+    if (button.id === 'back-to-events') { eventOpen = false; eventEditing = false; render(); return; }
+    if (button.id === 'edit-event') { eventEditing = true; render(); return; }
+    if (button.id === 'cancel-event-edit') { eventEditing = false; render(); return; }
     if (button.id === 'print') {
       document.querySelector('#print-report').innerHTML = reportHtml(state.data);
       window.print();
     }
-    if (button.dataset.deleteEvent && confirm('Delete this event, all its expenses, and its report?')) commit(d => { d.events = d.events.filter(e => e.id !== button.dataset.deleteEvent); }, 'Event deleted.');
+    if (button.dataset.deleteEvent && confirm('Delete this event, all its expenses, and its report?')) { commit(d => { d.events = d.events.filter(e => e.id !== button.dataset.deleteEvent); }, 'Event deleted.'); eventOpen = false; eventEditing = false; render(); }
     if (button.dataset.deleteExpense && confirm('Delete this expense?')) commit(d => { const e = d.events.find(e => e.id === eventId); e.Expenses = e.Expenses.filter(x => x.id !== button.dataset.deleteExpense); }, 'Expense deleted.');
     if (button.dataset.deleteFundraiser && confirm('Delete this fundraiser and its report?')) commit(d => { d.fundraisers = d.fundraisers.filter(f => f.id !== button.dataset.deleteFundraiser); }, 'Fundraiser deleted.');
   } catch (error) { tell(error.message, true); }
