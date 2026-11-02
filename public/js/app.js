@@ -49,13 +49,14 @@ function currentFundraiser() { return state.data.fundraisers.find(f => f.id === 
 function dashboard() {
   const d = state.data; const t = totals(d);
   return heading('Finance dashboard', 'A clear view of your club’s budget, events, and fundraising.') +
-    `<div class="metrics">${metric('Starting balance', usd(cents(d.starting_balance)))}${metric('Event expenses', usd(t.spending))}${metric('Available balance', usd(t.balance))}</div>
+    `<div class="metrics">${metric('Annual budget', usd(cents(d.starting_balance) + d.additional_funding.reduce((sum, f) => sum + cents(f.amount), 0)))}${metric('Event expenses', usd(t.spending))}${metric('Available balance', usd(t.balance))}</div>
     ${t.balance < 0 ? '<p class="message error">Recorded spending exceeds the available budget.</p>' : ''}
-    <div class="columns"><section class="card"><div class="card-actions budget-heading"><h2>Annual budget</h2><button type="button" class="subtle" id="budget-toggle">${budgetEditing ? 'Done Editing' : 'Edit Budget'}</button></div>
+    <div class="columns"><section class="card annual-budget-card"><h2>Annual budget</h2>
     <p class="total">Starting balance: <strong>${usd(cents(d.starting_balance))}</strong></p>
-    ${budgetEditing ? `<form id="budget">${cash('balance', 'Starting balance', d.starting_balance)}<button>Save Budget</button></form>` : ''}
-    ${d.allocations.length ? `<h3>Budget allocations</h3><div class="table-wrap"><table><thead><tr><th>Allocation</th><th>Amount</th>${budgetEditing ? '<th>Action</th>' : ''}</tr></thead><tbody>${d.allocations.map(a => `<tr><td>${esc(a.name)}</td><td>${usd(cents(a.amount))}</td>${budgetEditing ? `<td><button type="button" class="subtle danger" data-delete-allocation="${esc(a.id)}">Remove</button></td>` : ''}</tr>`).join('')}</tbody></table></div><p class="muted">Unallocated: ${usd(cents(d.starting_balance) - d.allocations.reduce((sum, a) => sum + cents(a.amount), 0))}</p>` : ''}
-    ${budgetEditing ? `<form id="allocation"><div class="form-grid">${input('name', 'Allocation name', '', 'text', 'maxlength="160" placeholder="e.g. Events"')}${cash('amount', 'Amount', '', true)}</div><button>Add Allocation</button></form>` : ''}
+    ${d.additional_funding.length ? `<h3>Additional funding</h3><div class="table-wrap"><table><thead><tr><th>Source</th><th>Amount</th>${budgetEditing ? '<th>Action</th>' : ''}</tr></thead><tbody>${d.additional_funding.map(f => `<tr><td>${esc(f.name)}</td><td>${usd(cents(f.amount))}</td>${budgetEditing ? `<td><button type="button" class="subtle danger" data-delete-funding="${esc(f.id)}">Remove</button></td>` : ''}</tr>`).join('')}</tbody></table></div>` : ''}
+    <p class="total">Total annual budget: <strong>${usd(cents(d.starting_balance) + d.additional_funding.reduce((sum, f) => sum + cents(f.amount), 0))}</strong></p>
+    ${budgetEditing ? `<form id="budget">${cash('balance', 'Starting balance', d.starting_balance)}<button>Save Budget</button></form><form id="funding"><h3>Add additional funding</h3><div class="form-grid">${input('name', 'Funding source', '', 'text', 'maxlength="160" placeholder="e.g. Student Government grant"')}${cash('amount', 'Amount received', '', true)}</div><button>Add Funding</button></form>` : ''}
+    <div class="budget-edit-action"><button type="button" class="subtle" id="budget-toggle">${budgetEditing ? 'Done Editing' : 'Edit Budget'}</button></div>
     </section>
     <section class="card"><h2>Fundraising</h2><dl><dt>Actual revenue</dt><dd>${usd(t.revenue)}</dd><dt>Actual expenses</dt><dd>${usd(t.expenses)}</dd><dt>Net profit</dt><dd>${usd(t.profit)}</dd></dl><p class="muted">Only completed fundraiser reports affect your balance.</p></section></div>
     <section class="card"><h2>Events at a glance</h2>${d.events.length ? table(['Event', 'Expenses', 'Total cost', 'Report'], d.events.map(e => [e.Event, e.Expenses.length, usd(eventCost(e)), hasReport(e) ? 'Complete' : 'Pending'])) : '<p class="empty">Your ledger starts here. <a href="#events">Create your first event</a> or import your existing JSON backup.</p>'}</section>`;
@@ -153,7 +154,7 @@ page.addEventListener('submit', event => {
   const n = key => Number(s(key));
   try {
     switch (form.id) {
-      case 'allocation': commit(d => { d.allocations.push({ id: newId(), name: s('name'), amount: n('amount') }); }, 'Allocation added.'); break;
+      case 'funding': commit(d => { d.additional_funding.push({ id: newId(), name: s('name'), amount: n('amount') }); }, 'Additional funding added.'); break;
       case 'budget': commit(d => { d.starting_balance = n('balance'); }, 'Budget saved.'); break;
       case 'create-event': {
         const id = newId();
@@ -177,7 +178,7 @@ page.addEventListener('click', event => {
   if (!button) return;
   try {
     if (button.id === 'budget-toggle') { budgetEditing = !budgetEditing; render(); return; }
-    if (button.dataset.deleteAllocation && confirm('Remove this budget allocation?')) { commit(d => { d.allocations = d.allocations.filter(a => a.id !== button.dataset.deleteAllocation); }, 'Allocation removed.'); return; }
+    if (button.dataset.deleteFunding && confirm('Remove this additional funding entry?')) { commit(d => { d.additional_funding = d.additional_funding.filter(f => f.id !== button.dataset.deleteFunding); }, 'Funding entry removed.'); return; }
     if (button.dataset.reportId) { reportId = button.dataset.reportId; reportPage = 'event'; render(); return; }
     if (button.id === 'meeting-open') { reportPage = 'meeting'; render(); return; }
     if (button.id === 'reports-back') { reportPage = 'list'; render(); return; }
