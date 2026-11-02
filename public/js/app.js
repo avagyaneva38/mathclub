@@ -54,7 +54,7 @@ function dashboard() {
     <div class="columns"><section class="card annual-budget-card"><h2>Annual budget</h2>
     <p class="total">Starting balance: <strong>${usd(cents(d.starting_balance))}</strong></p>
     ${d.additional_funding.length ? `<h3>Additional funding</h3><div class="table-wrap"><table><thead><tr><th>Source</th><th>Amount</th>${budgetEditing ? '<th>Action</th>' : ''}</tr></thead><tbody>${d.additional_funding.map(f => `<tr><td>${esc(f.name)}</td><td>${usd(cents(f.amount))}</td>${budgetEditing ? `<td><button type="button" class="subtle danger" data-delete-funding="${esc(f.id)}">Remove</button></td>` : ''}</tr>`).join('')}</tbody></table></div>` : ''}
-    <p class="total">Total annual budget: <strong>${usd(cents(d.starting_balance) + d.additional_funding.reduce((sum, f) => sum + cents(f.amount), 0))}</strong></p>
+    ${d.additional_funding.length ? `<p class="total">Total annual budget: <strong>${usd(cents(d.starting_balance) + d.additional_funding.reduce((sum, f) => sum + cents(f.amount), 0))}</strong></p>` : ''}
     ${budgetEditing ? `<form id="budget">${cash('balance', 'Starting balance', d.starting_balance)}<button>Save Budget</button></form><form id="funding"><h3>Add additional funding</h3><div class="form-grid">${input('name', 'Funding source', '', 'text', 'maxlength="160" placeholder="e.g. Student Government grant"')}${cash('amount', 'Amount received', '', true)}</div><button>Add Funding</button></form>` : ''}
     <div class="budget-edit-action"><button type="button" class="subtle" id="budget-toggle">${budgetEditing ? 'Done Editing' : 'Edit Budget'}</button></div>
     </section>
