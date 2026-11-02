@@ -2,7 +2,7 @@ export const CATEGORIES = ['Food', 'Decorations', 'Equipment', 'Prizes', 'Suppli
 export const FOOD_OPTIONS = ['Just enough', 'Too much', 'Not enough', 'No food was served'];
 export const REPEAT_OPTIONS = ['Yes', 'Maybe', 'No'];
 export const MAX_FILE_BYTES = 2 * 1024 * 1024;
-export const emptyData = () => ({ schema_version: 1, starting_balance: 0, events: [], fundraisers: [] });
+export const emptyData = () => ({ schema_version: 1, starting_balance: 0, allocations: [], events: [], fundraisers: [] });
 export const newId = () => crypto.randomUUID();
 const object = (x, label) => {
   if (!x || typeof x !== 'object' || Array.isArray(x)) throw new Error(`${label} must be an object.`);
@@ -64,6 +64,10 @@ export function validateData(raw) {
   const result = {
     schema_version: 1,
     starting_balance: money(d.starting_balance, 'Starting balance'),
+    allocations: list(d.allocations ?? [], 'Allocations').map(item => {
+      const allocation = object(item, 'Allocation');
+      return { id: id(allocation.id), name: textValue(allocation.name, 'Allocation name'), amount: money(allocation.amount, 'Allocation amount') };
+    }),
     events: list(d.events, 'Events').map(rawEvent => {
       const e = object(rawEvent, 'Event');
       return {
@@ -83,6 +87,7 @@ export function validateData(raw) {
         'Predicted Revenue': money(f['Predicted Revenue'], 'Predicted revenue'), Report: report(f.Report, true) };
     })
   };
+  if (result.allocations.reduce((sum, item) => sum + Math.round(item.amount * 100), 0) > Math.round(result.starting_balance * 100)) throw new Error('Allocations cannot exceed the starting budget.');
   totals(result); // Also reject aggregate amounts beyond exact integer arithmetic.
   return result;
 }
