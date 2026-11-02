@@ -7,6 +7,8 @@ let blocked = false;
 let eventId = '';
 let eventOpen = false;
 let eventEditing = false;
+let reportPage = 'list';
+let reportId = '';
 let fundraiserId = '';
 const page = document.querySelector('#page');
 const notice = document.querySelector('#notice');
@@ -93,13 +95,28 @@ function fundraising() {
     <div class="card-actions"><button class="danger" data-delete-fundraiser="${esc(f.id)}">Delete fundraiser</button></div></section>` : '<p class="empty">No fundraisers planned yet.</p>');
 }
 function reports() {
-  const e = currentEvent(); if (e) eventId = e.id;
-  const r = e?.Report ?? {};
-  return heading('Reports', 'Reflect on each event and bring a complete financial summary to your next meeting.') +
-    (e ? `<section class="card">${picker('event-picker', 'Select event', state.data.events, 'Event', e.id)}<h2>${esc(e.Event)}</h2>
-    <form id="event-report"><div class="form-grid">${integer('expected', 'Expected attendance', r['Expected Attendance'] ?? 0)}${integer('actual', 'Actual attendance', r['Actual Attendance'] ?? 0)}${select('food', 'How was the amount of food?', FOOD_OPTIONS, r['Food Result'])}${integer('leftovers', 'Leftover servings', r['Leftover Servings'] ?? 0)}${select('rating', 'Overall event success (1–5)', ['1', '2', '3', '4', '5'], String(r['Event Rating'] ?? 3))}${select('repeat', 'Would you host this event again?', REPEAT_OPTIONS, r['Host Again'])}</div>${notes(r.Notes)}<button>Save event report</button></form>
-    ${hasReport(e) ? `<div class="metrics">${metric('Actual attendance', r['Actual Attendance'])}${metric('Attendance vs. expected', r['Expected Attendance'] ? `${(100 * r['Actual Attendance'] / r['Expected Attendance']).toFixed(1)}%` : 'N/A')}${metric('Cost per attendee', r['Actual Attendance'] ? usd(eventCost(e) / r['Actual Attendance']) : 'N/A')}</div>` : ''}</section>` : '<p class="empty">Create an event to complete an event report.</p>') +
-    `<section class="card"><div class="card-actions"><h2>Meeting report</h2><button id="print">Print / Save PDF</button></div><p class="muted">Choose “Save as PDF” in your browser’s print dialog. The report includes your latest saved records.</p><div class="report-preview">${reportHtml(state.data)}</div></section>`;
+  if (reportPage === 'meeting') return heading('Meeting report', 'Review and print your meeting summary.') +
+    `<div class="card-actions event-toolbar"><button type="button" id="reports-back" class="subtle">← All Reports</button><button type="button" id="print">Print / Save PDF</button></div><section class="card"><div class="report-preview">${reportHtml(state.data)}</div></section>`;
+  const e = state.data.events.find(x => x.id === reportId);
+  if (reportPage === 'event' && e) {
+    const r = e.Report ?? {};
+    return heading(esc(e.Event), 'Complete or update this event report.') +
+      `<div class="card-actions event-toolbar"><button type="button" id="reports-back" class="subtle">← All Reports</button></div>
+      <section class="card"><h2>${hasReport(e) ? 'Edit report' : 'Complete report'}</h2><form id="event-report"><div class="form-grid">
+      ${integer('expected', 'Expected attendance', r['Expected Attendance'] ?? 0)}
+      ${integer('actual', 'Actual attendance', r['Actual Attendance'] ?? 0)}
+      ${select('food', 'How was the amount of food?', FOOD_OPTIONS, r['Food Result'])}
+      ${integer('leftovers', 'Leftover servings', r['Leftover Servings'] ?? 0)}
+      ${select('rating', 'Overall event success (1–5)', ['1','2','3','4','5'], String(r['Event Rating'] ?? 3))}
+      ${select('repeat', 'Would you host this event again?', REPEAT_OPTIONS, r['Host Again'])}
+      </div>${notes(r.Notes)}<button>Save Event Report</button></form></section>`;
+  }
+  return heading('Reports', 'Complete event reports and review meeting finances.') +
+    `<section class="card"><h2>Event reports</h2>
+    ${state.data.events.length ? `<div class="table-wrap"><table><thead><tr><th>Event</th><th>Status</th><th>Action</th></tr></thead><tbody>
+    ${state.data.events.map(e => `<tr><td>${esc(e.Event)}</td><td>${hasReport(e) ? 'Complete' : 'Pending'}</td><td><button type="button" class="subtle" data-report-id="${esc(e.id)}">${hasReport(e) ? 'View / Edit Report' : 'Complete Report'}</button></td></tr>`).join('')}
+    </tbody></table></div>` : '<p class="muted">Create an event in the Events tab to get started.</p>'}</section>
+    <section class="card"><div class="card-actions"><div><h2>Meeting report</h2><p class="muted">Financial summary and printable PDF.</p></div><button type="button" id="meeting-open">View Meeting Report</button></div></section>`;
 }
 function render() {
   const route = location.hash.slice(1);
@@ -111,7 +128,7 @@ function render() {
   });
   if (blocked) page.querySelectorAll('input, select, textarea, button').forEach(x => { x.disabled = true; });
 }
-window.addEventListener('hashchange', () => { eventOpen = false; eventEditing = false; tell(''); render(); document.querySelector('#main').focus(); });
+window.addEventListener('hashchange', () => { eventOpen = false; eventEditing = false; reportPage = 'list'; tell(''); render(); document.querySelector('#main').focus(); });
 window.addEventListener('storage', event => {
   if (event.key === STORAGE_KEY || event.key === null) {
     block('Records changed in another tab. Reload this page before editing to avoid overwriting those changes.');
@@ -143,7 +160,7 @@ page.addEventListener('submit', event => {
         commit(d => { d.fundraisers.push({ id, Fundraiser: s('name'), 'Predicted Revenue': n('revenue'), 'Predicted Expenses': n('expenses'), Report: {} }); }, 'Fundraiser planned.');
         fundraiserId = id; render(); break;
       }
-      case 'event-report': commit(d => { d.events.find(e => e.id === eventId).Report = { 'Expected Attendance': n('expected'), 'Actual Attendance': n('actual'), 'Food Result': s('food'), 'Leftover Servings': n('leftovers'), 'Event Rating': n('rating'), 'Host Again': s('repeat'), Notes: s('notes') }; }, 'Event report saved.'); break;
+      case 'event-report': commit(d => { d.events.find(e => e.id === (reportPage === 'event' ? reportId : eventId)).Report = { 'Expected Attendance': n('expected'), 'Actual Attendance': n('actual'), 'Food Result': s('food'), 'Leftover Servings': n('leftovers'), 'Event Rating': n('rating'), 'Host Again': s('repeat'), Notes: s('notes') }; }, 'Event report saved.'); break;
       case 'fundraiser-report': commit(d => { d.fundraisers.find(f => f.id === fundraiserId).Report = { 'Actual Revenue': n('revenue'), 'Actual Expenses': n('expenses'), Participants: n('participants'), Notes: s('notes') }; }, 'Fundraiser report saved.'); break;
     }
   } catch (error) { tell(error.message, true); }
@@ -152,6 +169,9 @@ page.addEventListener('click', event => {
   const button = event.target.closest('button');
   if (!button) return;
   try {
+    if (button.dataset.reportId) { reportId = button.dataset.reportId; reportPage = 'event'; render(); return; }
+    if (button.id === 'meeting-open') { reportPage = 'meeting'; render(); return; }
+    if (button.id === 'reports-back') { reportPage = 'list'; render(); return; }
     if (button.dataset.openEvent) { eventId = button.dataset.openEvent; eventOpen = true; eventEditing = false; render(); return; }
     if (button.id === 'back-to-events') { eventOpen = false; eventEditing = false; render(); return; }
     if (button.id === 'edit-event') { eventEditing = true; render(); return; }
