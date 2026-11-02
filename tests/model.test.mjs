@@ -72,3 +72,16 @@ test('unknown imported properties are discarded', () => {
   assert.deepEqual(validateData(d), emptyData());
   assert.equal({}.polluted, undefined);
 });
+
+test('additional funding increases available budget without fundraising', () => {
+  const d = validateData({ ...emptyData(), starting_balance: 600, additional_funding: [{ name: 'Grant', amount: 50 }] });
+  assert.equal(totals(d).balance, 65000);
+  assert.equal(d.additional_funding[0].name, 'Grant');
+  assert.deepEqual(validateData(d), d);
+  assert.match(reportHtml(d), /Additional funding/);
+});
+test('legacy allocations migrate to additional funding', () => {
+  const d = validateData({ ...emptyData(), starting_balance: 600, allocations: [{ name: 'Extra grant', amount: 50 }] });
+  assert.equal(d.additional_funding[0].amount, 50);
+  assert.equal(totals(d).balance, 65000);
+});
