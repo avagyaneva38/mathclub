@@ -85,3 +85,15 @@ test('legacy allocations migrate to additional funding', () => {
   assert.equal(d.additional_funding[0].amount, 50);
   assert.equal(totals(d).balance, 65000);
 });
+
+test('event dates are optional, persisted, and validated', () => {
+  const original = validateData(fixture());
+  assert.equal(original.events[0].Date, '');
+  original.events[0].Date = '2026-11-23';
+  assert.equal(validateData(original).events[0].Date, '2026-11-23');
+  for (const invalid of ['2026-02-30', '11/23/2026', '2026-13-01']) {
+    const d = structuredClone(original);
+    d.events[0].Date = invalid;
+    assert.throws(() => validateData(d), /Event date/);
+  }
+});
