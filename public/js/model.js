@@ -2,7 +2,7 @@ export const CATEGORIES = ['Food', 'Decorations', 'Equipment', 'Prizes', 'Suppli
 export const FOOD_OPTIONS = ['Just enough', 'Too much', 'Not enough', 'No food was served'];
 export const REPEAT_OPTIONS = ['Yes', 'Maybe', 'No'];
 export const MAX_FILE_BYTES = 2 * 1024 * 1024;
-export const emptyData = () => ({ schema_version: 1, starting_balance: 0, events: [], fundraisers: [] });
+export const emptyData = () => ({ schema_version: 1, starting_balance: 0, additional_funding: [], events: [], fundraisers: [] });
 export const newId = () => crypto.randomUUID();
 const object = (x, label) => {
   if (!x || typeof x !== 'object' || Array.isArray(x)) throw new Error(`${label} must be an object.`);
@@ -64,10 +64,15 @@ export function validateData(raw) {
   const result = {
     schema_version: 1,
     starting_balance: money(d.starting_balance, 'Starting balance'),
+    additional_funding: list(d.additional_funding ?? d.allocations ?? [], 'Additional funding').map(item => {
+      const funding = object(item, 'Additional funding');
+      return { id: id(funding.id), name: textValue(funding.name, 'Funding source'), amount: money(funding.amount, 'Funding amount') };
+    }),
     events: list(d.events, 'Events').map(rawEvent => {
       const e = object(rawEvent, 'Event');
       return {
         id: id(e.id), Event: textValue(e.Event, 'Event name'),
+        Date: (() => { const value = e.Date ?? ''; if (typeof value !== 'string' || (value && (!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number.isNaN(Date.parse(value + 'T12:00:00Z')) || new Date(value + 'T12:00:00Z').toISOString().slice(0, 10) !== value))) throw new Error('Event date must be a valid YYYY-MM-DD date.'); return value; })(),
         Expenses: list(e.Expenses, 'Expenses').map(rawExpense => {
           const x = object(rawExpense, 'Expense');
           const amount = money(x.Amount);
@@ -94,8 +99,9 @@ export function totals(d) {
   const revenue = d.fundraisers.reduce((sum, f) => sum + (hasReport(f) ? cents(f.Report['Actual Revenue']) : 0), 0);
   const expenses = d.fundraisers.reduce((sum, f) => sum + (hasReport(f) ? cents(f.Report['Actual Expenses']) : 0), 0);
   const profit = revenue - expenses;
-  const balance = cents(d.starting_balance) - spending + profit;
-  if (![spending, revenue, expenses, profit, balance].every(Number.isSafeInteger)) throw new Error('The combined amounts are too large.');
+  const funding = (d.additional_funding ?? []).reduce((sum, item) => sum + cents(item.amount), 0);
+  const balance = cents(d.starting_balance) + funding - spending + profit;
+  if (![spending, revenue, expenses, profit, funding, balance].every(Number.isSafeInteger)) throw new Error('The combined amounts are too large.');
   return { spending, revenue, expenses, profit, balance };
 }
 export const formatMoney = value => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value / 100);
