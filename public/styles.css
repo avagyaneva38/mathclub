@@ -157,3 +157,51 @@ footer { display: flex; justify-content: space-between; align-items: baseline; f
   #login-form, #password-form { padding: 22px; }
   .gallery-grid { grid-template-columns: 1fr; }
 }
+
+/* Mobile layout refinements — desktop design remains unchanged. */
+@media screen and (max-width: 900px) {
+  #app-shell .sidebar { position: static; inset: auto; width: 100%; padding: 14px 18px 12px; overflow: visible; }
+  #app-shell .brand { font-size: 17px; gap: 9px; }
+  #app-shell .brand .symbol { font-size: 31px; }
+  #app-shell .brand small { font-size: 10px; margin-top: 1px; }
+  #app-shell nav {
+    display: flex; flex-wrap: nowrap; gap: 5px; overflow-x: auto;
+    margin-top: 13px; padding: 0 0 5px; scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+  #app-shell nav a { flex: 0 0 auto; white-space: nowrap; padding: 8px 12px; font-size: 14px; }
+  #app-shell nav a[aria-current] { box-shadow: inset 0 -3px #deb593; }
+  #app-shell main { margin-left: 0; max-width: none; width: 100%; padding: 22px 18px 28px; }
+  #app-shell .metrics { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  #app-shell .columns { grid-template-columns: 1fr; }
+  #app-shell .gallery-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+}
+@media screen and (max-width: 600px) {
+  #app-shell main { padding: 18px 14px 24px; }
+  #app-shell header { margin: 18px 0 22px; }
+  #app-shell h1 { font-size: clamp(29px,8vw,37px); }
+  #app-shell .metrics, #app-shell .columns, #app-shell .form-grid { grid-template-columns: 1fr; }
+  #app-shell .metric { padding: 16px 18px; }
+  #app-shell .metric strong { font-size: 27px; }
+  #app-shell .card { padding: 17px 14px; margin-bottom: 16px; }
+  #app-shell .inline { display: block; }
+  #app-shell .inline button { margin-top: 12px; }
+  #app-shell .table-wrap { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #app-shell table { min-width: 480px; }
+  #app-shell .card-actions { gap: 10px; }
+  #app-shell .gallery-grid { grid-template-columns: 1fr; gap: 15px; }
+  #app-shell .gallery-header { margin: 12px 0 20px; }
+  #app-shell .gallery-toolbar { margin-bottom: 14px; }
+  #app-shell .gallery-item img { aspect-ratio: 4/3; }
+  #app-shell .gallery-item-body { padding: 13px 15px; }
+  #app-shell .gallery-upload { width: 100%; }
+  #app-shell footer { align-items: flex-start; }
+  #app-shell .backup-tools { width: 100%; }
+  #app-shell .backup-tools summary { margin-left: 0; }
+  #login-screen:not([hidden]), #password-screen:not([hidden]) { padding: 28px 16px; }
+  #login-form, #password-form { padding: 20px 18px; }
+}
+@media screen and (max-width: 380px) {
+  #app-shell nav a { font-size: 13px; padding: 8px 10px; }
+  #app-shell .card { padding: 15px 12px; }
+}
