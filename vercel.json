@@ -1,4 +1,3 @@
-
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
@@ -10,7 +9,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' https://esm.sh; style-src 'self'; img-src 'self' data:; connect-src 'self' https://uxjmgxafbxjnypkokhxh.supabase.co wss://uxjmgxafbxjnypkokhxh.supabase.co https://esm.sh; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"
+          "value": "default-src 'self'; script-src 'self' https://esm.sh; style-src 'self'; img-src 'self' data: https://uxjmgxafbxjnypkokhxh.supabase.co; connect-src 'self' https://uxjmgxafbxjnypkokhxh.supabase.co wss://uxjmgxafbxjnypkokhxh.supabase.co https://esm.sh; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'"
         },
         {
           "key": "X-Content-Type-Options",
