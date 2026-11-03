@@ -112,3 +112,6 @@ footer { display: flex; justify-content: space-between; align-items: baseline; f
 .annual-budget-card { align-self: start; }
 .budget-edit-action { display: flex; justify-content: flex-end; margin-top: 16px; }
 .budget-edit-action button { padding: 6px 12px; font-size: 13px; }
+
+/* Give Sign Out breathing room beneath the page label. */
+#logout-button { display: inline-block; margin-top: 16px; padding: 6px 12px; font-size: 12px; line-height: 1.3; }
