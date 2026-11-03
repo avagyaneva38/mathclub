@@ -73,6 +73,8 @@ async function saveFinances(draft, message) {
     throw error;
   } finally {
     saving = false;
+    // Refresh after the save completes so controls are not left disabled.
+    if (authenticated) render();
   }
 }
 
