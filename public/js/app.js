@@ -20,6 +20,55 @@ let reportId = '';
 let budgetEditing = false;
 let fundraiserId = '';
 let recoveryMode = false;
+let galleryItems = [];
+let galleryLoaded = false;
+let galleryLoading = false;
+let galleryUploadOpen = false;
+const GALLERY_BUCKET = 'math-club-gallery';
+async function loadGallery() {
+  if (galleryLoading) return;
+  galleryLoading = true;
+  try {
+    const { data, error } = await supabase.from('gallery_photos')
+      .select('id,title,description,event_date,storage_path,created_at')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    galleryItems = data ?? [];
+    galleryLoaded = true;
+  } catch (error) {
+    tell('Gallery could not be loaded: ' + error.message, true);
+  } finally {
+    galleryLoading = false;
+    if (authenticated && location.hash === '#gallery') render();
+  }
+}
+function gallery() {
+  const cards = galleryItems.map(item => {
+    const { data } = supabase.storage.from(GALLERY_BUCKET).getPublicUrl(item.storage_path);
+    return `<article class="gallery-item">
+      <img src="${esc(data.publicUrl)}" alt="${esc(item.title)}" loading="lazy">
+      <div class="gallery-item-body"><h2>${esc(item.title)}</h2>
+      ${item.event_date ? `<time>${esc(item.event_date)}</time>` : ''}
+      <p>${esc(item.description || '')}</p>
+      <button class="subtle danger" data-gallery-delete="${esc(item.id)}" type="button">Delete photo</button>
+      </div></article>`;
+  }).join('');
+  return `<header class="gallery-header"><h1>Gallery</h1>
+    <p>Highlights from our events, meetings, and club activities!</p></header>
+    <div class="gallery-toolbar"><button type="button" id="gallery-add">+ Add Photo</button></div>
+    <form id="gallery-upload" class="card gallery-upload" ${galleryUploadOpen ? '' : 'hidden'}>
+      <h2>Add a Math Club memory</h2>
+      <label>Photo<input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required></label>
+      <label>Title<input name="title" maxlength="100" required></label>
+      <label>Event date (optional)<input type="date" name="event_date"></label>
+      <label>Description<textarea name="description" maxlength="500" rows="3"></textarea></label>
+      <button type="submit">Upload Photo</button>
+    </form>
+    ${!galleryLoaded ? '<p class="gallery-status">Loading photos…</p>' :
+      cards ? `<div class="gallery-grid">${cards}</div>` :
+      '<p class="empty gallery-status">No photos yet. Add your first Math Club memory!</p>'}`;
+}
+
 
 const page = document.querySelector('#page');
 const notice = document.querySelector('#notice');
@@ -442,12 +491,13 @@ function render() {
   if (!authenticated) return;
 
   const route = location.hash.slice(1);
-  const views = { dashboard, events, fundraising, reports };
+  const views = { dashboard, events, fundraising, reports, gallery };
   const active = Object.hasOwn(views, route)
     ? route
     : 'dashboard';
 
   page.innerHTML = views[active]();
+  if (active === 'gallery' && !galleryLoaded && !galleryLoading) void loadGallery();
 
   document.querySelectorAll('nav a').forEach(a => {
     if (a.hash === `#${active}`) {
@@ -473,6 +523,64 @@ window.addEventListener('hashchange', () => {
   $('#main').focus();
 });
 
+page.addEventListener('click', async event => {
+  if (!authenticated) return;
+  if (event.target.closest('#gallery-add')) {
+    galleryUploadOpen = !galleryUploadOpen;
+    render();
+    return;
+  }
+  const del = event.target.closest('[data-gallery-delete]');
+  if (!del) return;
+  const item = galleryItems.find(x => x.id === del.dataset.galleryDelete);
+  if (!item || !confirm('Delete this gallery photo?')) return;
+  try {
+    const { error } = await supabase.from('gallery_photos').delete().eq('id', item.id);
+    if (error) throw error;
+    const removed = await supabase.storage.from(GALLERY_BUCKET).remove([item.storage_path]);
+    if (removed.error) tell('Photo entry deleted, but storage cleanup failed: ' + removed.error.message, true);
+    galleryLoaded = false;
+    await loadGallery();
+  } catch (error) { tell('Could not delete photo: ' + error.message, true); }
+});
+page.addEventListener('submit', async event => {
+  if (event.target.id !== 'gallery-upload') return;
+  event.preventDefault();
+  if (!authenticated) return;
+  const form = event.target;
+  const button = form.querySelector('button[type="submit"]');
+  const values = new FormData(form);
+  const file = values.get('photo');
+  if (!(file instanceof File) || !file.size || file.size > 8 * 1024 * 1024 ||
+      !['image/jpeg','image/png','image/webp'].includes(file.type)) {
+    tell('Choose a JPG, PNG or WebP image smaller than 8 MB.', true);
+    return;
+  }
+  button.disabled = true;
+  const ext = { 'image/jpeg':'jpg','image/png':'png','image/webp':'webp' }[file.type];
+  const path = crypto.randomUUID() + '.' + ext;
+  try {
+    const uploaded = await supabase.storage.from(GALLERY_BUCKET).upload(path, file, {contentType:file.type});
+    if (uploaded.error) throw uploaded.error;
+    const { error } = await supabase.from('gallery_photos').insert({
+      title: String(values.get('title') || '').trim(),
+      description: String(values.get('description') || '').trim(),
+      event_date: values.get('event_date') || null,
+      storage_path: path
+    });
+    if (error) {
+      await supabase.storage.from(GALLERY_BUCKET).remove([path]);
+      throw error;
+    }
+    galleryUploadOpen = false;
+    galleryLoaded = false;
+    await loadGallery();
+    tell('Photo added to the gallery.');
+  } catch (error) {
+    tell('Photo upload failed: ' + error.message, true);
+    button.disabled = false;
+  }
+});
 page.addEventListener('change', event => {
   if (event.target.id === 'event-picker') {
     eventId = event.target.value;
