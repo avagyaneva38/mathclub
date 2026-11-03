@@ -157,3 +157,46 @@ footer { display: flex; justify-content: space-between; align-items: baseline; f
   #login-form, #password-form { padding: 22px; }
   .gallery-grid { grid-template-columns: 1fr; }
 }
+
+/* Horizontal navigation and compact gallery, matching the approved mockup. */
+#app-shell .sidebar {
+  position: sticky; top: 0; inset: auto; z-index: 20;
+  width: 100%; min-height: 0; padding: 14px clamp(16px,3vw,42px);
+  display: flex; flex-direction: row; align-items: center; justify-content: space-between;
+  gap: 24px; overflow: visible; background: #fffbf8; color: var(--ink);
+  border-bottom: 2px solid var(--wine);
+}
+#app-shell .brand { flex-shrink: 0; gap: 8px; letter-spacing: 1px; font-size: 21px; }
+#app-shell .brand .symbol { font-size: 32px; }
+#app-shell .brand small { display: none; }
+#app-shell nav { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0; }
+#app-shell nav a {
+  color: var(--ink); padding: 8px 13px; border-radius: 7px;
+  text-decoration: none; font-size: 15px; white-space: nowrap;
+}
+#app-shell nav a:hover, #app-shell nav a[aria-current] { background: #f2deda; }
+#app-shell nav a[aria-current] { box-shadow: none; color: var(--wine); }
+#app-shell main { margin: 0 auto; max-width: 1440px; padding: 20px clamp(18px,4vw,52px) 28px; }
+#app-shell .gallery-header { margin: 14px 0 28px; }
+#app-shell .gallery-header h1 { font-size: clamp(36px,4vw,48px); }
+#app-shell .gallery-toolbar { margin-bottom: 18px; }
+#app-shell .gallery-grid { gap: 16px; }
+#app-shell .gallery-item { border-radius: 10px; }
+#app-shell .gallery-item-body { padding: 12px 15px; }
+#app-shell .gallery-item h2 { font-size: 19px; margin-bottom: 5px; }
+#app-shell .gallery-item p { font-size: 14px; line-height: 1.45; }
+@media(max-width:760px) {
+  #app-shell .sidebar { flex-direction: column; align-items: center; gap: 8px; padding: 12px; }
+  #app-shell nav { justify-content: center; gap: 2px; }
+  #app-shell nav a { padding: 7px 9px; font-size: 13px; }
+}
+@media(max-width:600px) {
+  #app-shell .gallery-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+  #app-shell .gallery-item-body { padding: 10px; }
+  #app-shell .gallery-item h2 { font-size: 16px; }
+  #app-shell .gallery-item p { font-size: 12px; }
+}
+@media(max-width:380px) {
+  #app-shell .gallery-grid { grid-template-columns: 1fr; }
+}
+@media print { #app-shell .sidebar { display: none; } #app-shell main { display: none; } }
